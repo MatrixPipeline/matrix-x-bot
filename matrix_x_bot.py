@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import requests
 import os
 
@@ -6,6 +6,7 @@ app = Flask(__name__)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
+DEFAULT_CHAT_ID = os.environ.get("CHAT_ID")  # Optional fallback for outbound messages
 
 @app.route('/', methods=['GET'])
 def home():
@@ -30,13 +31,27 @@ def webhook():
 
     return "OK"
 
+@app.route('/send', methods=['POST'])
+def external_send():
+    data = request.get_json()
+    message = data.get("text", "")
+    chat_id = data.get("chat_id", DEFAULT_CHAT_ID)
+
+    if not chat_id or not message:
+        return jsonify({"status": "error", "message": "Missing 'chat_id' or 'text'"}), 400
+
+    response = send_message(chat_id, message)
+    return jsonify({"status": "success", "message": "Message sent", "telegram_response": response})
+
 def send_message(chat_id, text):
     url = f"{TELEGRAM_API_URL}/sendMessage"
     payload = {
         "chat_id": chat_id,
         "text": text
     }
-    requests.post(url, json=payload)
+    response = requests.post(url, json=payload)
+    print("Telegram API response:", response.json())  # Debug output
+    return response.json()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
