@@ -6,10 +6,13 @@ app = Flask(__name__)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
-DEFAULT_CHAT_ID = os.environ.get("CHAT_ID")  # Optional fallback for outbound messages
+DEFAULT_CHAT_ID = os.environ.get("CHAT_ID", "7646320197")  # Master Adil's Telegram ID as fallback
 
 @app.route('/', methods=['GET'])
 def home():
+    print("BOT_TOKEN is:", BOT_TOKEN)  # Debug line
+    response = send_message(DEFAULT_CHAT_ID, "🧠 Neo:/ Matrix core check successful. Autonomous signal dispatch confirmed.")
+    print("Telegram response from / route:", response)
     return "Matrix XP Bot is Online. 🧠🕶️"
 
 @app.route('/webhook', methods=['POST'])
